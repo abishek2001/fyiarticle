@@ -40,14 +40,14 @@
     <div class="row">
       <div class="col-sm-12">
         <div class="jumbotron jumbotron-fluid">
-            <h1 class="display-3 title">Create Article</h1>
+            <h1 id="rainbow" class="display-3 title">Create Article</h1>
             <p class="lead phrase">Design your own article</p>
-            <button type="button" class="btn btn-primary artbut lead show" >Create</button>
+            <button type="button" class="btn btn-primary artbut lead show" id="scrollButton">Create</button>
         </div>
       </div>
     </div>
   </div>
-<div class="wrapper2 second" >
+<div  id="scroll" class="wrapper2 second" >
   <div class="container article-container">
     <div class="row">
       <div class="col"></div>
@@ -57,14 +57,16 @@
             <form class="article-form">
               <div class="form-group">
                 <h1><center>Create Article</center></h1><br>
-                <input type="text" class="form-control" id="titleInput" placeholder="Add Title">
+                <input type="text" name="title" class="form-control" id="titleInput" placeholder="Add Title" value="" required />
+                
               </div>
               <div class="form-group">
-                <textarea type="text" class="form-control" id="paraInput" placeholder="Add Paragraph" rows="6" cols="50"></textarea>
+                <textarea type="text" name="para" class="form-control" id="paraInput" placeholder="Add Paragraph" rows="6" cols="50" value="" required /></textarea>
+                
               </div>
               <button type="button" class="btn article-btn btn-primary" data-toggle="modal" data-target="#staticBackdrop">Add Background Image</button>
                 <button type="button" class="btn article-btn btn-primary" data-toggle="modal" data-target="#staticBackdrop2">Add Content Image</button>
-                <button type="button" class="btn article-btn btn-danger" value="submit" id="articlesubmit">Submit Article</button>
+                <button type="submit" class="btn article-btn btn-danger" value="submit" id="articlesubmit">Submit Article</button>
             </form>
           </div>
         </div>
@@ -86,7 +88,18 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <input type="file" class="form-control" id="titleInput" placeholder="Add title">
+          
+
+          <!--<input type="file" class="form-control" id="titleInput" placeholder="Add title">-->
+
+
+<div id="drop-region">
+  <div class="drop-message">
+    Drag & Drop images or click to upload
+  </div>
+  <div id="image-preview"></div>
+</div>
+
         </div>
       </div>
       <div class="modal-footer">
@@ -107,7 +120,13 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <input type="file" class="form-control" id="titleInput" placeholder="Add title">
+          <!--<input type="file" class="form-control" id="titleInput" placeholder="Add title">-->
+<div id="drop-region">
+  <div class="drop-message">
+    Drag & Drop images or click to upload
+  </div>
+  <div id="image-preview"></div>
+</div>
         </div>
       </div>
       <div class="modal-footer">
@@ -119,9 +138,205 @@
 </div>
 
     <!-- JS. -->
-    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.1.0.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script type="text/javascript"> 
+      $(document).ready( function() {
+        $("#articlesubmit").click( function() {
+          let a = $("#titleInput")[0];
+          let b = $("#paraInput")[0];
+          if(a.value=="")
+            a.setCustomValidity("Title is required");
+          else
+            a.setCustomValidity("");
+  
+          if(b.value=="")
+            b.setCustomValidity("Paragraph input is required");
+          else
+            b.setCustomValidity("");
+        });
+        $("#scrollButton").click( function(){
+             let a = $("#scroll")[0];
+             let h = a.getBoundingClientRect()['y'];
+             $("html, body").animate( 
+                 { scrollTop: h }, 1500, 'swing'); 
+           });
+
+        var // where files are dropped + file selector is opened
+  dropRegion = document.getElementById("drop-region"),
+  // where images are previewed
+  imagePreviewRegion = document.getElementById("image-preview");
+
+
+// open file selector when clicked on the drop region
+var fakeInput = document.createElement("input");
+fakeInput.type = "file";
+fakeInput.accept = "image/*";
+//fakeInput.multiple = true;
+dropRegion.addEventListener('click', function() {
+  fakeInput.click();
+});
+
+fakeInput.addEventListener("change", function() {
+  var files = fakeInput.files;
+  handleFiles(files);
+});
+
+
+function preventDefault(e) {
+  e.preventDefault();
+    e.stopPropagation();
+}
+
+dropRegion.addEventListener('dragenter', preventDefault, false)
+dropRegion.addEventListener('dragleave', preventDefault, false)
+dropRegion.addEventListener('dragover', preventDefault, false)
+dropRegion.addEventListener('drop', preventDefault, false)
+
+
+function handleDrop(e) {
+  var dt = e.dataTransfer,
+    files = dt.files;
+
+  if (files.length) {
+
+    handleFiles(files);
+    
+  } else {
+
+    // check for img
+    var html = dt.getData('text/html'),
+          match = html && /\bsrc="?([^"\s]+)"?\s*/.exec(html),
+          url = match && match[1];
+
+
+
+      if (url) {
+          uploadImageFromURL(url);
+          return;
+      }
+
+  }
+
+
+  function uploadImageFromURL(url) {
+    var img = new Image;
+        var c = document.createElement("canvas");
+        var ctx = c.getContext("2d");
+
+        img.onload = function() {
+            c.width = this.naturalWidth;     // update canvas size to match image
+            c.height = this.naturalHeight;
+            ctx.drawImage(this, 0, 0);       // draw in image
+            c.toBlob(function(blob) {        // get content as PNG blob
+
+              // call our main function
+                handleFiles( [blob] );
+
+            }, "image/png");
+        };
+        img.onerror = function() {
+            alert("Error in uploading");
+        }
+        img.crossOrigin = "";              // if from different origin
+        img.src = url;
+  }
+
+}
+
+dropRegion.addEventListener('drop', handleDrop, false);
+
+
+
+function handleFiles(files) {
+  for (var i = 0, len = files.length; i < len; i++) {
+    if (validateImage(files[i]))
+      previewAnduploadImage(files[i]);
+  }
+}
+
+function validateImage(image) {
+  // check the type
+  var validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+  if (validTypes.indexOf( image.type ) === -1) {
+    alert("Invalid File Type");
+    return false;
+  }
+
+  // check the size
+  var maxSizeInBytes = 10e6; // 10MB
+  if (image.size > maxSizeInBytes) {
+    alert("File too large");
+    return false;
+  }
+
+  return true;
+
+}
+
+function previewAnduploadImage(image) {
+
+  // container
+  var imgView = document.createElement("div");
+  imgView.className = "image-view";
+  imagePreviewRegion.appendChild(imgView);
+
+  // previewing image
+  var img = document.createElement("img");
+  imgView.appendChild(img);
+
+  // progress overlay
+  var overlay = document.createElement("div");
+  overlay.className = "overlay";
+  imgView.appendChild(overlay);
+
+
+  // read the image...
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    img.src = e.target.result;
+  }
+  reader.readAsDataURL(image);
+
+  // create FormData
+  var formData = new FormData();
+  formData.append('image', image);
+
+  // upload the image
+  var uploadLocation = 'https://api.imgbb.com/1/upload';
+  formData.append('key', 'bb63bee9d9846c8d5b7947bcdb4b3573');
+
+  var ajax = new XMLHttpRequest();
+  ajax.open("POST", uploadLocation, true);
+
+  ajax.onreadystatechange = function(e) {
+    if (ajax.readyState === 4) {
+      if (ajax.status === 200) {
+        // done!
+      } else {
+        // error!
+      }
+    }
+  }
+
+  ajax.upload.onprogress = function(e) {
+
+    // change progress
+    // (reduce the width of overlay)
+
+    var perc = (e.loaded / e.total * 100) || 100,
+      width = 100 - perc;
+
+    overlay.style.width = width;
+  }
+
+  ajax.send(formData);
+
+}
+      });
+
+    </script> 
   </body>
 
   </html>
